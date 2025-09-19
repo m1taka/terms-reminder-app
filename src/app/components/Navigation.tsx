@@ -29,8 +29,8 @@ export default function Navigation({ activeSection, setActiveSection }: Navigati
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-2">
-            <span className="text-2xl">⚖️</span>
-            <h1 className="text-xl font-bold text-gray-900">Law Documents</h1>
+            <span className="text-2xl">📋</span>
+            <h1 className="text-xl font-bold text-gray-900">Terms Reminder</h1>
           </div>
           
           <div className="flex items-center space-x-4">

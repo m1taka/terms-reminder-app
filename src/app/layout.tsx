@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Law Documents Management System",
-  description: "Professional law documents management with AI assistant and calendar scheduling",
+  title: "Terms Reminder Management System",
+  description: "Professional terms reminder management with AI assistant, calendar scheduling, and contract tracking",
 };
 
 export default function RootLayout({

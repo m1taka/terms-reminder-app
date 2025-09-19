@@ -19,16 +19,12 @@ export default function DocumentsSection() {
 
   const categories = ['General', 'Contracts', 'Court Documents', 'Legal Briefs', 'Correspondence'];
 
-  useEffect(() => {
-    fetchDocuments();
-  }, [searchTerm, selectedCategory]);
-
   const fetchDocuments = async () => {
     try {
       const params = new URLSearchParams();
       if (searchTerm) params.append('search', searchTerm);
       if (selectedCategory) params.append('category', selectedCategory);
-      
+
       const response = await fetch(`http://localhost:5000/api/documents?${params}`);
       const data = await response.json();
       setDocuments(data);
@@ -37,7 +33,9 @@ export default function DocumentsSection() {
     }
   };
 
-  const handleDelete = async (documentId: string) => {
+  useEffect(() => {
+    fetchDocuments();
+  }, [searchTerm, selectedCategory, fetchDocuments]);  const handleDelete = async (documentId: string) => {
     if (!confirm('Are you sure you want to delete this document?')) return;
 
     try {

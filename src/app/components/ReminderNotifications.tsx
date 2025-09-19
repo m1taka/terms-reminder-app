@@ -64,7 +64,7 @@ export default function ReminderNotifications() {
       {showNotifications && (
         <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
           <div className="p-4 border-b border-gray-200">
-            <h3 className="font-medium text-gray-900">Today's Reminders</h3>
+            <h3 className="font-medium text-gray-900">Today&apos;s Reminders</h3>
           </div>
           <div className="max-h-80 overflow-y-auto">
             {todayReminders.map((reminder) => (

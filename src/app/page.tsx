@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { Provider } from 'react-redux';
+import { store } from '../redux/store';
 import Navigation from './components/Navigation';
 import CalendarSection from './components/CalendarSection';
 import AIAssistant from './components/AIAssistant';
@@ -23,11 +25,13 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation activeSection={activeSection} setActiveSection={setActiveSection} />
-      <main className="container mx-auto px-4 py-8">
-        {renderActiveSection()}
-      </main>
-    </div>
+    <Provider store={store}>
+      <div className="min-h-screen bg-gray-50">
+        <Navigation activeSection={activeSection} setActiveSection={setActiveSection} />
+        <main className="container mx-auto px-4 py-8">
+          {renderActiveSection()}
+        </main>
+      </div>
+    </Provider>
   );
 }

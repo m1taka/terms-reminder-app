@@ -1,19 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-
-interface Event {
-  id: string;
-  title: string;
-  description: string;
-  date: string;
-  time: string;
-  type: string;
-  documentId?: string;
-}
+import { useAppDispatch, useAppSelector } from '../../redux/hooks';
+import {
+  fetchEvents,
+  createEvent,
+  deleteEvent
+} from '../../redux/slices/eventsSlice';
 
 export default function CalendarSection() {
-  const [events, setEvents] = useState<Event[]>([]);
+  const dispatch = useAppDispatch();
+  const { events, loading, error } = useAppSelector(state => state.events);
+  
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [showEventForm, setShowEventForm] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -22,43 +20,29 @@ export default function CalendarSection() {
     description: '',
     date: '',
     time: '',
-    type: 'meeting'
+    type: 'meeting' as 'meeting' | 'deadline' | 'court' | 'consultation' | 'reminder'
   });
 
-  const eventTypes = ['meeting', 'deadline', 'court', 'consultation', 'other'];
+  const eventTypes: ('meeting' | 'deadline' | 'court' | 'consultation' | 'reminder')[] = ['meeting', 'deadline', 'court', 'consultation', 'reminder'];
 
   useEffect(() => {
-    fetchEvents();
-  }, [currentMonth]);
-
-  const fetchEvents = async () => {
-    try {
-      const month = currentMonth.getMonth() + 1;
-      const year = currentMonth.getFullYear();
-      const response = await fetch(`http://localhost:5000/api/events?month=${month}&year=${year}`);
-      const data = await response.json();
-      setEvents(data);
-    } catch (error) {
-      console.error('Error fetching events:', error);
-    }
-  };
+    const month = (currentMonth.getMonth() + 1).toString();
+    const year = currentMonth.getFullYear().toString();
+    dispatch(fetchEvents({ month, year }));
+  }, [currentMonth, dispatch]);
 
   const handleCreateEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:5000/api/events', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newEvent),
-      });
-
-      if (response.ok) {
-        fetchEvents();
-        setShowEventForm(false);
-        setNewEvent({ title: '', description: '', date: '', time: '', type: 'meeting' });
-      }
+      const eventData = {
+        ...newEvent,
+        location: '',
+        attendees: [],
+        status: 'scheduled' as const
+      };
+      await dispatch(createEvent(eventData)).unwrap();
+      setShowEventForm(false);
+      setNewEvent({ title: '', description: '', date: '', time: '', type: 'meeting' as const });
     } catch (error) {
       console.error('Error creating event:', error);
     }
@@ -68,13 +52,7 @@ export default function CalendarSection() {
     if (!confirm('Are you sure you want to delete this event?')) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/events/${eventId}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        fetchEvents();
-      }
+      await dispatch(deleteEvent(eventId)).unwrap();
     } catch (error) {
       console.error('Error deleting event:', error);
     }
@@ -84,7 +62,6 @@ export default function CalendarSection() {
     const year = date.getFullYear();
     const month = date.getMonth();
     const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
     const startDate = new Date(firstDay);
     startDate.setDate(firstDay.getDate() - firstDay.getDay());
 
@@ -110,9 +87,9 @@ export default function CalendarSection() {
       deadline: 'bg-red-100 text-red-800',
       court: 'bg-purple-100 text-purple-800',
       consultation: 'bg-green-100 text-green-800',
-      other: 'bg-gray-100 text-gray-800'
+      reminder: 'bg-orange-100 text-orange-800'
     };
-    return colors[type as keyof typeof colors] || colors.other;
+    return colors[type as keyof typeof colors] || colors.meeting;
   };
 
   const monthNames = [
@@ -134,6 +111,27 @@ export default function CalendarSection() {
   const isCurrentMonth = (date: Date) => {
     return date.getMonth() === currentMonth.getMonth();
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-md p-4">
+        <div className="flex">
+          <div className="ml-3">
+            <h3 className="text-sm font-medium text-red-800">Error loading calendar</h3>
+            <div className="mt-2 text-sm text-red-700">{error}</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -191,7 +189,7 @@ export default function CalendarSection() {
                 <div className="space-y-1">
                   {dateEvents.slice(0, 2).map(event => (
                     <div
-                      key={event.id}
+                      key={event._id}
                       className={`text-xs px-1 py-0.5 rounded truncate ${getEventTypeColor(event.type)}`}
                       title={event.title}
                     >
@@ -217,7 +215,7 @@ export default function CalendarSection() {
               <p className="text-gray-500 text-sm">No events scheduled for this date.</p>
             ) : (
               getEventsForDate(new Date(selectedDate)).map(event => (
-                <div key={event.id} className="border border-gray-200 rounded-lg p-3">
+                <div key={event._id} className="border border-gray-200 rounded-lg p-3">
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="flex items-center space-x-2">
@@ -230,7 +228,7 @@ export default function CalendarSection() {
                       <p className="text-sm text-gray-500 mt-1">🕒 {event.time}</p>
                     </div>
                     <button
-                      onClick={() => handleDeleteEvent(event.id)}
+                      onClick={() => handleDeleteEvent(event._id)}
                       className="text-red-600 hover:text-red-800 text-sm"
                     >
                       Delete
@@ -292,7 +290,7 @@ export default function CalendarSection() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
                 <select
                   value={newEvent.type}
-                  onChange={(e) => setNewEvent({ ...newEvent, type: e.target.value })}
+                  onChange={(e) => setNewEvent({ ...newEvent, type: e.target.value as 'meeting' | 'deadline' | 'court' | 'consultation' | 'reminder' })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   {eventTypes.map(type => (

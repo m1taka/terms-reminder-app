@@ -1,39 +1,24 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-
-interface Reminder {
-  id: string;
-  title: string;
-  description: string;
-  dueDate: string;
-  reminderDate: string;
-  termStartDate?: string;
-  termEndDate?: string;
-  priority: string;
-  category: string;
-  assignedTo?: string;
-  relatedCase?: string;
-  contractParty1?: string;
-  contractParty2?: string;
-  type: string;
-  documentId?: string;
-  status: string;
-  extractedContext?: string;
-  createdAt: string;
-}
-
-interface Document {
-  id: string;
-  filename: string;
-}
+import { useEffect, useState } from 'react';
+import { useAppDispatch, useAppSelector } from '../../redux/hooks';
+import {
+  fetchReminders,
+  createReminder,
+  dismissReminder,
+  snoozeReminder,
+  deleteReminder,
+  setFilters,
+  type Reminder
+} from '../../redux/slices/remindersSlice';
+import { fetchDocuments } from '../../redux/slices/documentsSlice';
 
 export default function RemindersSection() {
-  const [reminders, setReminders] = useState<Reminder[]>([]);
-  const [documents, setDocuments] = useState<Document[]>([]);
+  const dispatch = useAppDispatch();
+  const { reminders, loading, error, filters } = useAppSelector(state => state.reminders);
+  const { documents } = useAppSelector(state => state.documents);
+  
   const [showReminderForm, setShowReminderForm] = useState(false);
-  const [filterType, setFilterType] = useState('all');
-  const [filterStatus, setFilterStatus] = useState('active');
   const [newReminder, setNewReminder] = useState({
     title: '',
     description: '',
@@ -41,14 +26,15 @@ export default function RemindersSection() {
     reminderDate: '',
     termStartDate: '',
     termEndDate: '',
-    priority: 'medium',
-    category: 'legal',
+    priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
+    category: 'legal' as 'legal' | 'administrative' | 'client' | 'court' | 'deadline' | 'meeting',
     assignedTo: '',
     relatedCase: '',
     contractParty1: '',
     contractParty2: '',
-    type: 'manual',
-    documentId: ''
+    type: 'manual' as 'manual' | 'deadline' | 'court' | 'filing' | 'meeting',
+    documentId: '',
+    status: 'active' as 'active' | 'dismissed' | 'completed' | 'snoozed'
   });
 
   const reminderTypes = ['manual', 'deadline', 'court', 'filing', 'meeting'];
@@ -57,65 +43,32 @@ export default function RemindersSection() {
   const categoryTypes = ['legal', 'administrative', 'client', 'court', 'deadline', 'meeting'];
 
   useEffect(() => {
-    fetchReminders();
-    fetchDocuments();
-  }, [filterType, filterStatus]);
-
-  const fetchReminders = async () => {
-    try {
-      const params = new URLSearchParams();
-      if (filterType !== 'all') params.append('type', filterType);
-      if (filterStatus !== 'all') params.append('status', filterStatus);
-      
-      const response = await fetch(`http://localhost:5000/api/reminders?${params}`);
-      const data = await response.json();
-      setReminders(data);
-    } catch (error) {
-      console.error('Error fetching reminders:', error);
-    }
-  };
-
-  const fetchDocuments = async () => {
-    try {
-      const response = await fetch('http://localhost:5000/api/documents');
-      const data = await response.json();
-      setDocuments(data);
-    } catch (error) {
-      console.error('Error fetching documents:', error);
-    }
-  };
+    dispatch(fetchReminders(filters));
+    dispatch(fetchDocuments());
+  }, [dispatch, filters]);
 
   const handleCreateReminder = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:5000/api/reminders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newReminder),
+      await dispatch(createReminder(newReminder)).unwrap();
+      setShowReminderForm(false);
+      setNewReminder({
+        title: '',
+        description: '',
+        dueDate: '',
+        reminderDate: '',
+        termStartDate: '',
+        termEndDate: '',
+        priority: 'medium',
+        category: 'legal',
+        assignedTo: '',
+        relatedCase: '',
+        contractParty1: '',
+        contractParty2: '',
+        type: 'manual',
+        documentId: '',
+        status: 'active'
       });
-
-      if (response.ok) {
-        fetchReminders();
-        setShowReminderForm(false);
-        setNewReminder({
-          title: '',
-          description: '',
-          dueDate: '',
-          reminderDate: '',
-          termStartDate: '',
-          termEndDate: '',
-          priority: 'medium',
-          category: 'legal',
-          assignedTo: '',
-          relatedCase: '',
-          contractParty1: '',
-          contractParty2: '',
-          type: 'manual',
-          documentId: ''
-        });
-      }
     } catch (error) {
       console.error('Error creating reminder:', error);
     }
@@ -123,13 +76,7 @@ export default function RemindersSection() {
 
   const handleDismissReminder = async (reminderId: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/reminders/${reminderId}/dismiss`, {
-        method: 'PUT',
-      });
-
-      if (response.ok) {
-        fetchReminders();
-      }
+      await dispatch(dismissReminder(reminderId)).unwrap();
     } catch (error) {
       console.error('Error dismissing reminder:', error);
     }
@@ -141,17 +88,7 @@ export default function RemindersSection() {
     const snoozeUntil = snoozeDate.toISOString().split('T')[0];
 
     try {
-      const response = await fetch(`http://localhost:5000/api/reminders/${reminderId}/snooze`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ snoozeUntil }),
-      });
-
-      if (response.ok) {
-        fetchReminders();
-      }
+      await dispatch(snoozeReminder({ id: reminderId, snoozeUntil })).unwrap();
     } catch (error) {
       console.error('Error snoozing reminder:', error);
     }
@@ -161,16 +98,14 @@ export default function RemindersSection() {
     if (!confirm('Are you sure you want to delete this reminder?')) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/reminders/${reminderId}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        fetchReminders();
-      }
+      await dispatch(deleteReminder(reminderId)).unwrap();
     } catch (error) {
       console.error('Error deleting reminder:', error);
     }
+  };
+
+  const handleFilterChange = (filterName: string, value: string) => {
+    dispatch(setFilters({ [filterName]: value }));
   };
 
   const getTypeColor = (type: string) => {
@@ -201,7 +136,7 @@ export default function RemindersSection() {
 
   const isToday = (reminderDate: string) => {
     const today = new Date().toISOString().split('T')[0];
-    return reminderDate === today;
+    return reminderDate.split('T')[0] === today;
   };
 
   const getUrgencyClass = (reminder: Reminder) => {
@@ -212,9 +147,30 @@ export default function RemindersSection() {
   };
 
   const getDocumentName = (documentId: string) => {
-    const doc = documents.find(d => d.id === documentId);
-    return doc ? doc.filename : 'Unknown Document';
+    const doc = documents.find(d => d._id === documentId);
+    return doc ? doc.originalName : 'Unknown Document';
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-md p-4">
+        <div className="flex">
+          <div className="ml-3">
+            <h3 className="text-sm font-medium text-red-800">Error loading reminders</h3>
+            <div className="mt-2 text-sm text-red-700">{error}</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -234,8 +190,8 @@ export default function RemindersSection() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
             <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
+              value={filters.type}
+              onChange={(e) => handleFilterChange('type', e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="all">All Types</option>
@@ -249,13 +205,28 @@ export default function RemindersSection() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
             <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
+              value={filters.status}
+              onChange={(e) => handleFilterChange('status', e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               {statusTypes.map(status => (
                 <option key={status} value={status}>
                   {status.charAt(0).toUpperCase() + status.slice(1)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+            <select
+              value={filters.priority}
+              onChange={(e) => handleFilterChange('priority', e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="all">All Priorities</option>
+              {priorityTypes.map(priority => (
+                <option key={priority} value={priority}>
+                  {priority.charAt(0).toUpperCase() + priority.slice(1)}
                 </option>
               ))}
             </select>
@@ -266,12 +237,12 @@ export default function RemindersSection() {
         <div className="space-y-3">
           {reminders.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
-              No reminders found. Upload documents with dates or create manual reminders.
+              No reminders found. Create manual reminders or upload documents with dates.
             </div>
           ) : (
             reminders.map((reminder) => (
               <div
-                key={reminder.id}
+                key={reminder._id}
                 className={`border border-gray-200 rounded-lg p-4 transition-all ${getUrgencyClass(reminder)}`}
               >
                 <div className="flex items-start justify-between">
@@ -350,7 +321,7 @@ export default function RemindersSection() {
                       )}
                       {reminder.extractedContext && (
                         <div>
-                          <strong>Context:</strong> "{reminder.extractedContext}"
+                          <strong>Context:</strong> &quot;{reminder.extractedContext}&quot;
                         </div>
                       )}
                     </div>
@@ -362,30 +333,30 @@ export default function RemindersSection() {
                         <button
                           className="bg-yellow-600 text-white px-3 py-1 rounded text-sm hover:bg-yellow-700 transition-colors"
                           onClick={() => {
-                            const dropdown = document.getElementById(`snooze-${reminder.id}`);
+                            const dropdown = document.getElementById(`snooze-${reminder._id}`);
                             dropdown?.classList.toggle('hidden');
                           }}
                         >
                           Snooze
                         </button>
                         <div
-                          id={`snooze-${reminder.id}`}
+                          id={`snooze-${reminder._id}`}
                           className="hidden absolute right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-10"
                         >
                           <button
-                            onClick={() => handleSnoozeReminder(reminder.id, 1)}
+                            onClick={() => handleSnoozeReminder(reminder._id, 1)}
                             className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50"
                           >
                             1 day
                           </button>
                           <button
-                            onClick={() => handleSnoozeReminder(reminder.id, 3)}
+                            onClick={() => handleSnoozeReminder(reminder._id, 3)}
                             className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50"
                           >
                             3 days
                           </button>
                           <button
-                            onClick={() => handleSnoozeReminder(reminder.id, 7)}
+                            onClick={() => handleSnoozeReminder(reminder._id, 7)}
                             className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50"
                           >
                             1 week
@@ -393,13 +364,13 @@ export default function RemindersSection() {
                         </div>
                       </div>
                       <button
-                        onClick={() => handleDismissReminder(reminder.id)}
+                        onClick={() => handleDismissReminder(reminder._id)}
                         className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 transition-colors"
                       >
                         Dismiss
                       </button>
                       <button
-                        onClick={() => handleDeleteReminder(reminder.id)}
+                        onClick={() => handleDeleteReminder(reminder._id)}
                         className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors"
                       >
                         Delete
@@ -488,7 +459,7 @@ export default function RemindersSection() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
                   <select
                     value={newReminder.priority}
-                    onChange={(e) => setNewReminder({ ...newReminder, priority: e.target.value })}
+                    onChange={(e) => setNewReminder({ ...newReminder, priority: e.target.value as 'low' | 'medium' | 'high' | 'urgent' })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     {priorityTypes.map(priority => (
@@ -502,7 +473,7 @@ export default function RemindersSection() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
                   <select
                     value={newReminder.category}
-                    onChange={(e) => setNewReminder({ ...newReminder, category: e.target.value })}
+                    onChange={(e) => setNewReminder({ ...newReminder, category: e.target.value as 'legal' | 'administrative' | 'client' | 'court' | 'deadline' | 'meeting' })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     {categoryTypes.map(category => (
@@ -563,7 +534,7 @@ export default function RemindersSection() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
                 <select
                   value={newReminder.type}
-                  onChange={(e) => setNewReminder({ ...newReminder, type: e.target.value })}
+                  onChange={(e) => setNewReminder({ ...newReminder, type: e.target.value as 'manual' | 'deadline' | 'court' | 'filing' | 'meeting' })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   {reminderTypes.map(type => (
@@ -582,8 +553,8 @@ export default function RemindersSection() {
                 >
                   <option value="">No document</option>
                   {documents.map(doc => (
-                    <option key={doc.id} value={doc.id}>
-                      {doc.filename}
+                    <option key={doc._id} value={doc._id}>
+                      {doc.originalName}
                     </option>
                   ))}
                 </select>
