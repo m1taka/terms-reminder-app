@@ -2,18 +2,15 @@
 
 import { useState } from 'react';
 import Navigation from './components/Navigation';
-import DocumentsSection from './components/DocumentsSection';
 import CalendarSection from './components/CalendarSection';
 import AIAssistant from './components/AIAssistant';
 import RemindersSection from './components/RemindersSection';
 
 export default function Home() {
-  const [activeSection, setActiveSection] = useState('documents');
+  const [activeSection, setActiveSection] = useState('reminders');
 
   const renderActiveSection = () => {
     switch (activeSection) {
-      case 'documents':
-        return <DocumentsSection />;
       case 'calendar':
         return <CalendarSection />;
       case 'reminders':
@@ -21,7 +18,7 @@ export default function Home() {
       case 'ai':
         return <AIAssistant />;
       default:
-        return <DocumentsSection />;
+        return <RemindersSection />;
     }
   };
 

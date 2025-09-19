@@ -10,9 +10,8 @@ interface NavigationProps {
 
 export default function Navigation({ activeSection, setActiveSection }: NavigationProps) {
   const navItems = [
-    { id: 'documents', label: 'Documents', icon: '📄' },
-    { id: 'calendar', label: 'Calendar', icon: '📅' },
     { id: 'reminders', label: 'Reminders', icon: '⏰' },
+    { id: 'calendar', label: 'Calendar', icon: '📅' },
     { id: 'ai', label: 'AI Assistant', icon: '🤖' }
   ];
 

@@ -8,6 +8,14 @@ interface Reminder {
   description: string;
   dueDate: string;
   reminderDate: string;
+  termStartDate?: string;
+  termEndDate?: string;
+  priority: string;
+  category: string;
+  assignedTo?: string;
+  relatedCase?: string;
+  contractParty1?: string;
+  contractParty2?: string;
   type: string;
   documentId?: string;
   status: string;
@@ -31,12 +39,22 @@ export default function RemindersSection() {
     description: '',
     dueDate: '',
     reminderDate: '',
+    termStartDate: '',
+    termEndDate: '',
+    priority: 'medium',
+    category: 'legal',
+    assignedTo: '',
+    relatedCase: '',
+    contractParty1: '',
+    contractParty2: '',
     type: 'manual',
     documentId: ''
   });
 
   const reminderTypes = ['manual', 'deadline', 'court', 'filing', 'meeting'];
   const statusTypes = ['active', 'dismissed', 'all'];
+  const priorityTypes = ['low', 'medium', 'high', 'urgent'];
+  const categoryTypes = ['legal', 'administrative', 'client', 'court', 'deadline', 'meeting'];
 
   useEffect(() => {
     fetchReminders();
@@ -86,6 +104,14 @@ export default function RemindersSection() {
           description: '',
           dueDate: '',
           reminderDate: '',
+          termStartDate: '',
+          termEndDate: '',
+          priority: 'medium',
+          category: 'legal',
+          assignedTo: '',
+          relatedCase: '',
+          contractParty1: '',
+          contractParty2: '',
           type: 'manual',
           documentId: ''
         });
@@ -275,6 +301,48 @@ export default function RemindersSection() {
                         <strong>Due:</strong> {new Date(reminder.dueDate).toLocaleDateString()} | 
                         <strong> Remind:</strong> {new Date(reminder.reminderDate).toLocaleDateString()}
                       </div>
+                      {reminder.termStartDate && reminder.termEndDate && (
+                        <div>
+                          <strong>Term Period:</strong> {new Date(reminder.termStartDate).toLocaleDateString()} - {new Date(reminder.termEndDate).toLocaleDateString()}
+                        </div>
+                      )}
+                      <div>
+                        <strong>Priority:</strong> 
+                        <span className={`ml-1 px-2 py-0.5 rounded text-xs ${
+                          reminder.priority === 'urgent' ? 'bg-red-100 text-red-800' :
+                          reminder.priority === 'high' ? 'bg-orange-100 text-orange-800' :
+                          reminder.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-green-100 text-green-800'
+                        }`}>
+                          {reminder.priority}
+                        </span>
+                        {reminder.category && (
+                          <>
+                            <strong className="ml-3">Category:</strong> 
+                            <span className="ml-1 px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-800">
+                              {reminder.category}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                      {reminder.assignedTo && (
+                        <div>
+                          <strong>Assigned to:</strong> {reminder.assignedTo}
+                        </div>
+                      )}
+                      {reminder.relatedCase && (
+                        <div>
+                          <strong>Related Case:</strong> {reminder.relatedCase}
+                        </div>
+                      )}
+                      {(reminder.contractParty1 || reminder.contractParty2) && (
+                        <div>
+                          <strong>Contract Parties:</strong> 
+                          {reminder.contractParty1 && <span className="ml-1">{reminder.contractParty1}</span>}
+                          {reminder.contractParty1 && reminder.contractParty2 && <span className="mx-1">↔</span>}
+                          {reminder.contractParty2 && <span>{reminder.contractParty2}</span>}
+                        </div>
+                      )}
                       {reminder.documentId && (
                         <div>
                           <strong>Document:</strong> {getDocumentName(reminder.documentId)}
@@ -347,8 +415,8 @@ export default function RemindersSection() {
 
       {/* Manual Reminder Form Modal */}
       {showReminderForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-bold text-gray-900 mb-4">Create Manual Reminder</h3>
             <form onSubmit={handleCreateReminder} className="space-y-4">
               <div>
@@ -370,26 +438,127 @@ export default function RemindersSection() {
                   rows={3}
                 />
               </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                  <input
+                    type="date"
+                    required
+                    value={newReminder.dueDate}
+                    onChange={(e) => setNewReminder({ ...newReminder, dueDate: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Reminder Date</label>
+                  <input
+                    type="date"
+                    required
+                    value={newReminder.reminderDate}
+                    onChange={(e) => setNewReminder({ ...newReminder, reminderDate: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Term Start Date (Optional)</label>
+                  <input
+                    type="date"
+                    value={newReminder.termStartDate}
+                    onChange={(e) => setNewReminder({ ...newReminder, termStartDate: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Term End Date (Optional)</label>
+                  <input
+                    type="date"
+                    value={newReminder.termEndDate}
+                    onChange={(e) => setNewReminder({ ...newReminder, termEndDate: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                  <select
+                    value={newReminder.priority}
+                    onChange={(e) => setNewReminder({ ...newReminder, priority: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    {priorityTypes.map(priority => (
+                      <option key={priority} value={priority}>
+                        {priority.charAt(0).toUpperCase() + priority.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                  <select
+                    value={newReminder.category}
+                    onChange={(e) => setNewReminder({ ...newReminder, category: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    {categoryTypes.map(category => (
+                      <option key={category} value={category}>
+                        {category.charAt(0).toUpperCase() + category.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Assigned To (Optional)</label>
                 <input
-                  type="date"
-                  required
-                  value={newReminder.dueDate}
-                  onChange={(e) => setNewReminder({ ...newReminder, dueDate: e.target.value })}
+                  type="text"
+                  value={newReminder.assignedTo}
+                  onChange={(e) => setNewReminder({ ...newReminder, assignedTo: e.target.value })}
+                  placeholder="e.g., John Doe, Legal Team"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Reminder Date</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Related Case (Optional)</label>
                 <input
-                  type="date"
-                  required
-                  value={newReminder.reminderDate}
-                  onChange={(e) => setNewReminder({ ...newReminder, reminderDate: e.target.value })}
+                  type="text"
+                  value={newReminder.relatedCase}
+                  onChange={(e) => setNewReminder({ ...newReminder, relatedCase: e.target.value })}
+                  placeholder="e.g., Case #2024-001, Smith vs. ABC Corp"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Contract Party 1 (Optional)</label>
+                  <input
+                    type="text"
+                    value={newReminder.contractParty1}
+                    onChange={(e) => setNewReminder({ ...newReminder, contractParty1: e.target.value })}
+                    placeholder="e.g., ABC Corporation, John Doe"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Contract Party 2 (Optional)</label>
+                  <input
+                    type="text"
+                    value={newReminder.contractParty2}
+                    onChange={(e) => setNewReminder({ ...newReminder, contractParty2: e.target.value })}
+                    placeholder="e.g., XYZ Ltd, Jane Smith"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
                 <select
