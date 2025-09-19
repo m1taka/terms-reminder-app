@@ -55,8 +55,16 @@ export default function DocumentsSection() {
       });
 
       if (response.ok) {
+        const result = await response.json();
         fetchDocuments();
         event.target.value = ''; // Reset file input
+        
+        // Show success message with reminder info
+        if (result.remindersCreated > 0) {
+          alert(`Document uploaded successfully! ${result.remindersCreated} automatic reminder(s) created from detected dates.`);
+        } else {
+          alert('Document uploaded successfully!');
+        }
       } else {
         alert('Upload failed');
       }
