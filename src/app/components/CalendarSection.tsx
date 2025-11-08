@@ -7,10 +7,12 @@ import {
   createEvent,
   deleteEvent
 } from '../../redux/slices/eventsSlice';
+import { fetchReminders } from '../../redux/slices/remindersSlice';
 
 export default function CalendarSection() {
   const dispatch = useAppDispatch();
   const { events, loading, error } = useAppSelector(state => state.events);
+  const { reminders } = useAppSelector(state => state.reminders);
   
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [showEventForm, setShowEventForm] = useState(false);
@@ -29,6 +31,7 @@ export default function CalendarSection() {
     const month = (currentMonth.getMonth() + 1).toString();
     const year = currentMonth.getFullYear().toString();
     dispatch(fetchEvents({ month, year }));
+    dispatch(fetchReminders());
   }, [currentMonth, dispatch]);
 
   const handleCreateEvent = async (e: React.FormEvent) => {
@@ -84,6 +87,15 @@ export default function CalendarSection() {
     });
   };
 
+  const getRemindersForDate = (date: Date) => {
+    const dateStr = date.toISOString().split('T')[0];
+    return reminders.filter(reminder => {
+      if (!reminder.dueDate) return false;
+      const reminderDate = new Date(reminder.dueDate).toISOString().split('T')[0];
+      return reminderDate === dateStr;
+    });
+  };
+
   const getEventTypeColor = (type: string) => {
     const colors = {
       meeting: 'bg-blue-100 text-blue-800',
@@ -93,6 +105,15 @@ export default function CalendarSection() {
       reminder: 'bg-orange-100 text-orange-800'
     };
     return colors[type as keyof typeof colors] || colors.meeting;
+  };
+
+  const getReminderPriorityColor = (priority: string) => {
+    const colors = {
+      high: 'bg-red-100 text-red-800',
+      medium: 'bg-orange-100 text-orange-800',
+      low: 'bg-blue-100 text-blue-800'
+    };
+    return colors[priority as keyof typeof colors] || colors.medium;
   };
 
   const monthNames = [
@@ -180,6 +201,8 @@ export default function CalendarSection() {
           ))}
           {getDaysInMonth(currentMonth).map((date, index) => {
             const dateEvents = getEventsForDate(date);
+            const dateReminders = getRemindersForDate(date);
+            const totalItems = dateEvents.length + dateReminders.length;
             return (
               <div
                 key={index}
@@ -190,17 +213,26 @@ export default function CalendarSection() {
               >
                 <div className="text-sm">{date.getDate()}</div>
                 <div className="space-y-1">
-                  {dateEvents.slice(0, 2).map(event => (
+                  {dateEvents.slice(0, 1).map(event => (
                     <div
                       key={event._id}
                       className={`text-xs px-1 py-0.5 rounded truncate ${getEventTypeColor(event.type)}`}
-                      title={event.title}
+                      title={`Event: ${event.title}`}
                     >
-                      {event.title}
+                      📅 {event.title}
                     </div>
                   ))}
-                  {dateEvents.length > 2 && (
-                    <div className="text-xs text-gray-500">+{dateEvents.length - 2} more</div>
+                  {dateReminders.slice(0, totalItems < 2 ? 1 : 0).map(reminder => (
+                    <div
+                      key={reminder._id}
+                      className={`text-xs px-1 py-0.5 rounded truncate ${getReminderPriorityColor(reminder.priority)}`}
+                      title={`Reminder: ${reminder.title}`}
+                    >
+                      🔔 {reminder.title}
+                    </div>
+                  ))}
+                  {totalItems > 2 && (
+                    <div className="text-xs text-gray-500">+{totalItems - 2} more</div>
                   )}
                 </div>
               </div>
@@ -208,37 +240,83 @@ export default function CalendarSection() {
           })}
         </div>
 
-        {/* Events for Selected Date */}
+        {/* Events and Reminders for Selected Date */}
         <div className="border-t pt-4">
           <h4 className="font-medium text-gray-900 mb-3">
-            Events for {new Date(selectedDate).toLocaleDateString()}
+            Events & Reminders for {new Date(selectedDate).toLocaleDateString()}
           </h4>
-          <div className="space-y-2">
-            {getEventsForDate(new Date(selectedDate)).length === 0 ? (
-              <p className="text-gray-500 text-sm">No events scheduled for this date.</p>
-            ) : (
-              getEventsForDate(new Date(selectedDate)).map(event => (
-                <div key={event._id} className="border border-gray-200 rounded-lg p-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        <h5 className="font-medium text-gray-900">{event.title}</h5>
-                        <span className={`px-2 py-1 rounded-full text-xs ${getEventTypeColor(event.type)}`}>
-                          {event.type}
-                        </span>
+          <div className="space-y-4">
+            {/* Events Section */}
+            {getEventsForDate(new Date(selectedDate)).length > 0 && (
+              <div>
+                <h5 className="text-sm font-semibold text-gray-700 mb-2">📅 Events</h5>
+                <div className="space-y-2">
+                  {getEventsForDate(new Date(selectedDate)).map(event => (
+                    <div key={event._id} className="border border-gray-200 rounded-lg p-3">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <div className="flex items-center space-x-2">
+                            <h5 className="font-medium text-gray-900">{event.title}</h5>
+                            <span className={`px-2 py-1 rounded-full text-xs ${getEventTypeColor(event.type)}`}>
+                              {event.type}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600 mt-1">{event.description}</p>
+                          <p className="text-sm text-gray-500 mt-1">🕒 {event.time}</p>
+                        </div>
+                        <button
+                          onClick={() => handleDeleteEvent(event._id)}
+                          className="text-red-600 hover:text-red-800 text-sm"
+                        >
+                          Delete
+                        </button>
                       </div>
-                      <p className="text-sm text-gray-600 mt-1">{event.description}</p>
-                      <p className="text-sm text-gray-500 mt-1">🕒 {event.time}</p>
                     </div>
-                    <button
-                      onClick={() => handleDeleteEvent(event._id)}
-                      className="text-red-600 hover:text-red-800 text-sm"
-                    >
-                      Delete
-                    </button>
-                  </div>
+                  ))}
                 </div>
-              ))
+              </div>
+            )}
+
+            {/* Reminders Section */}
+            {getRemindersForDate(new Date(selectedDate)).length > 0 && (
+              <div>
+                <h5 className="text-sm font-semibold text-gray-700 mb-2">🔔 Reminders</h5>
+                <div className="space-y-2">
+                  {getRemindersForDate(new Date(selectedDate)).map(reminder => (
+                    <div key={reminder._id} className="border border-gray-200 rounded-lg p-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2">
+                            <h5 className="font-medium text-gray-900">{reminder.title}</h5>
+                            <span className={`px-2 py-1 rounded-full text-xs ${getReminderPriorityColor(reminder.priority)}`}>
+                              {reminder.priority}
+                            </span>
+                            <span className={`px-2 py-1 rounded-full text-xs ${
+                              reminder.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                              reminder.status === 'completed' ? 'bg-green-100 text-green-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {reminder.status}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600 mt-1">{reminder.description}</p>
+                          {reminder.dueDate && (
+                            <p className="text-sm text-gray-500 mt-1">
+                              ⏰ Due: {new Date(reminder.dueDate).toLocaleString()}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* No items message */}
+            {getEventsForDate(new Date(selectedDate)).length === 0 && 
+             getRemindersForDate(new Date(selectedDate)).length === 0 && (
+              <p className="text-gray-500 text-sm">No events or reminders scheduled for this date.</p>
             )}
           </div>
         </div>

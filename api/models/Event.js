@@ -37,6 +37,10 @@ const eventSchema = new mongoose.Schema({
     type: String,
     enum: ['scheduled', 'completed', 'cancelled'],
     default: 'scheduled'
+  },
+  googleCalendarEventId: {
+    type: String,
+    default: null
   }
 }, {
   timestamps: true

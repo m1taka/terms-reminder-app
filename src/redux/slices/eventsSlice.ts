@@ -13,6 +13,7 @@ export interface Event {
   location: string;
   attendees: string[];
   status: 'scheduled' | 'completed' | 'cancelled';
+  googleCalendarEventId?: string;
   createdAt: string;
   updatedAt: string;
 }

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { body, query, validationResult } = require('express-validator');
 const Event = require('../models/Event');
+const googleCalendar = require('../services/googleCalendar');
 
 // GET all events with filters
 router.get('/', [
@@ -86,6 +87,27 @@ router.post('/', [
     const event = new Event(req.body);
     await event.save();
 
+    // Sync with Google Calendar
+    try {
+      const dateTime = `${event.date.toISOString().split('T')[0]}T${event.time}:00`;
+      const calendarEvent = await googleCalendar.createEvent({
+        title: event.title,
+        description: event.description || `Event Type: ${event.type}\nLocation: ${event.location || 'N/A'}`,
+        dateTime: dateTime,
+        dueDate: event.date,
+        priority: event.type === 'deadline' || event.type === 'court' ? 'high' : 'medium'
+      });
+
+      if (calendarEvent && calendarEvent.id) {
+        event.googleCalendarEventId = calendarEvent.id;
+        await event.save();
+        console.log('✓ Created Google Calendar event:', calendarEvent.id);
+      }
+    } catch (calendarError) {
+      console.error('Google Calendar sync error:', calendarError.message);
+      // Continue even if calendar sync fails
+    }
+
     res.status(201).json({ message: 'Event created successfully', event });
   } catch (error) {
     console.error('Error creating event:', error);
@@ -118,6 +140,24 @@ router.put('/:id', [
       return res.status(404).json({ error: 'Event not found' });
     }
 
+    // Sync with Google Calendar
+    if (event.googleCalendarEventId) {
+      try {
+        const dateTime = `${new Date(event.date).toISOString().split('T')[0]}T${event.time}:00`;
+        await googleCalendar.updateEvent(event.googleCalendarEventId, {
+          title: event.title,
+          description: event.description || `Event Type: ${event.type}\nLocation: ${event.location || 'N/A'}`,
+          dateTime: dateTime,
+          dueDate: event.date,
+          priority: event.type === 'deadline' || event.type === 'court' ? 'high' : 'medium'
+        });
+        console.log('✓ Updated Google Calendar event:', event.googleCalendarEventId);
+      } catch (calendarError) {
+        console.error('Google Calendar update error:', calendarError.message);
+        // Continue even if calendar sync fails
+      }
+    }
+
     res.json({ message: 'Event updated successfully', event });
   } catch (error) {
     console.error('Error updating event:', error);
@@ -128,12 +168,24 @@ router.put('/:id', [
 // DELETE event
 router.delete('/:id', async (req, res) => {
   try {
-    const event = await Event.findByIdAndDelete(req.params.id);
+    const event = await Event.findById(req.params.id);
     
     if (!event) {
       return res.status(404).json({ error: 'Event not found' });
     }
 
+    // Delete from Google Calendar if synced
+    if (event.googleCalendarEventId) {
+      try {
+        await googleCalendar.deleteEvent(event.googleCalendarEventId);
+        console.log('✓ Deleted Google Calendar event:', event.googleCalendarEventId);
+      } catch (calendarError) {
+        console.error('Google Calendar delete error:', calendarError.message);
+        // Continue even if calendar deletion fails
+      }
+    }
+
+    await Event.findByIdAndDelete(req.params.id);
     res.json({ message: 'Event deleted successfully' });
   } catch (error) {
     console.error('Error deleting event:', error);
