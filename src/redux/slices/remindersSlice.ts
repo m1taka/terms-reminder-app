@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import API_URL from '@/config/api';
 
 // Types
 export interface Reminder {
@@ -19,6 +20,7 @@ export interface Reminder {
   documentId?: string;
   status: 'active' | 'dismissed' | 'completed' | 'snoozed';
   extractedContext?: string;
+  googleCalendarEventId?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -56,7 +58,7 @@ export const fetchReminders = createAsyncThunk(
     if (params?.type && params.type !== 'all') queryParams.append('type', params.type);
     if (params?.priority && params.priority !== 'all') queryParams.append('priority', params.priority);
     
-    const response = await fetch(`http://localhost:5000/api/reminders?${queryParams}`);
+    const response = await fetch(`${API_URL}/api/reminders?${queryParams}`);
     if (!response.ok) throw new Error('Failed to fetch reminders');
     return response.json();
   }
@@ -65,7 +67,7 @@ export const fetchReminders = createAsyncThunk(
 export const fetchTodayReminders = createAsyncThunk(
   'reminders/fetchTodayReminders',
   async () => {
-    const response = await fetch('http://localhost:5000/api/reminders/today');
+    const response = await fetch(`${API_URL}/api/reminders/today`);
     if (!response.ok) throw new Error('Failed to fetch today\'s reminders');
     return response.json();
   }
@@ -74,7 +76,7 @@ export const fetchTodayReminders = createAsyncThunk(
 export const createReminder = createAsyncThunk(
   'reminders/createReminder',
   async (reminderData: Omit<Reminder, '_id' | 'createdAt' | 'updatedAt'>) => {
-    const response = await fetch('http://localhost:5000/api/reminders', {
+    const response = await fetch(`${API_URL}/api/reminders`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(reminderData),
@@ -88,7 +90,7 @@ export const createReminder = createAsyncThunk(
 export const updateReminder = createAsyncThunk(
   'reminders/updateReminder',
   async ({ id, updates }: { id: string; updates: Partial<Reminder> }) => {
-    const response = await fetch(`http://localhost:5000/api/reminders/${id}`, {
+    const response = await fetch(`${API_URL}/api/reminders/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates),
@@ -102,7 +104,7 @@ export const updateReminder = createAsyncThunk(
 export const dismissReminder = createAsyncThunk(
   'reminders/dismissReminder',
   async (id: string) => {
-    const response = await fetch(`http://localhost:5000/api/reminders/${id}/dismiss`, {
+    const response = await fetch(`${API_URL}/api/reminders/${id}/dismiss`, {
       method: 'PUT',
     });
     if (!response.ok) throw new Error('Failed to dismiss reminder');
@@ -114,7 +116,7 @@ export const dismissReminder = createAsyncThunk(
 export const snoozeReminder = createAsyncThunk(
   'reminders/snoozeReminder',
   async ({ id, snoozeUntil }: { id: string; snoozeUntil: string }) => {
-    const response = await fetch(`http://localhost:5000/api/reminders/${id}/snooze`, {
+    const response = await fetch(`${API_URL}/api/reminders/${id}/snooze`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ snoozeUntil }),

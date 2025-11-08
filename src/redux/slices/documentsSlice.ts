@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import API_URL from '@/config/api';
 
 // Types
 export interface Document {
@@ -51,7 +52,7 @@ export const fetchDocuments = createAsyncThunk(
     if (params?.tag) queryParams.append('tag', params.tag);
     if (params?.search) queryParams.append('search', params.search);
     
-    const response = await fetch(`http://localhost:5000/api/documents?${queryParams}`);
+    const response = await fetch(`${API_URL}/api/documents?${queryParams}`);
     if (!response.ok) throw new Error('Failed to fetch documents');
     return response.json();
   }
@@ -60,7 +61,7 @@ export const fetchDocuments = createAsyncThunk(
 export const deleteDocument = createAsyncThunk(
   'documents/deleteDocument',
   async (id: string) => {
-    const response = await fetch(`http://localhost:5000/api/documents/${id}`, {
+    const response = await fetch(`${API_URL}/api/documents/${id}`, {
       method: 'DELETE',
     });
     if (!response.ok) throw new Error('Failed to delete document');

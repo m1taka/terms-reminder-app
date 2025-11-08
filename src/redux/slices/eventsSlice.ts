@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import API_URL from '@/config/api';
 
 // Types
 export interface Event {
@@ -48,7 +49,7 @@ export const fetchEvents = createAsyncThunk(
     if (params?.year) queryParams.append('year', params.year);
     if (params?.type && params.type !== 'all') queryParams.append('type', params.type);
     
-    const response = await fetch(`http://localhost:5000/api/events?${queryParams}`);
+    const response = await fetch(`${API_URL}/api/events?${queryParams}`);
     if (!response.ok) throw new Error('Failed to fetch events');
     return response.json();
   }
@@ -57,7 +58,7 @@ export const fetchEvents = createAsyncThunk(
 export const createEvent = createAsyncThunk(
   'events/createEvent',
   async (eventData: Omit<Event, '_id' | 'createdAt' | 'updatedAt'>) => {
-    const response = await fetch('http://localhost:5000/api/events', {
+    const response = await fetch(`${API_URL}/api/events`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(eventData),
@@ -71,7 +72,7 @@ export const createEvent = createAsyncThunk(
 export const updateEvent = createAsyncThunk(
   'events/updateEvent',
   async ({ id, updates }: { id: string; updates: Partial<Event> }) => {
-    const response = await fetch(`http://localhost:5000/api/events/${id}`, {
+    const response = await fetch(`${API_URL}/api/events/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates),
@@ -85,7 +86,7 @@ export const updateEvent = createAsyncThunk(
 export const deleteEvent = createAsyncThunk(
   'events/deleteEvent',
   async (id: string) => {
-    const response = await fetch(`http://localhost:5000/api/events/${id}`, {
+    const response = await fetch(`${API_URL}/api/events/${id}`, {
       method: 'DELETE',
     });
     if (!response.ok) throw new Error('Failed to delete event');

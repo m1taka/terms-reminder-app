@@ -173,26 +173,26 @@ export default function RemindersSection() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Reminders & Deadlines</h2>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Reminders & Deadlines</h2>
           <button
             onClick={() => setShowReminderForm(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+            className="bg-blue-600 text-white px-4 py-3 sm:py-2 rounded-md hover:bg-blue-700 transition-colors font-medium text-sm sm:text-base whitespace-nowrap"
           >
-            Add Manual Reminder
+            + Add Reminder
           </button>
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
             <select
               value={filters.type}
               onChange={(e) => handleFilterChange('type', e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2.5 sm:py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
             >
               <option value="all">All Types</option>
               {reminderTypes.map(type => (
@@ -207,7 +207,7 @@ export default function RemindersSection() {
             <select
               value={filters.status}
               onChange={(e) => handleFilterChange('status', e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2.5 sm:py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
             >
               {statusTypes.map(status => (
                 <option key={status} value={status}>
@@ -221,7 +221,7 @@ export default function RemindersSection() {
             <select
               value={filters.priority}
               onChange={(e) => handleFilterChange('priority', e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2.5 sm:py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
             >
               <option value="all">All Priorities</option>
               {priorityTypes.map(priority => (
@@ -236,50 +236,63 @@ export default function RemindersSection() {
         {/* Reminders List */}
         <div className="space-y-3">
           {reminders.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-12 sm:py-8 text-gray-500 text-sm sm:text-base">
               No reminders found. Create manual reminders or upload documents with dates.
             </div>
           ) : (
             reminders.map((reminder) => (
               <div
                 key={reminder._id}
-                className={`border border-gray-200 rounded-lg p-4 transition-all ${getUrgencyClass(reminder)}`}
+                className={`border border-gray-200 rounded-lg p-4 sm:p-4 transition-all ${getUrgencyClass(reminder)}`}
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <span className="text-lg">{getTypeIcon(reminder.type)}</span>
-                      <h4 className="font-medium text-gray-900">{reminder.title}</h4>
-                      <span className={`px-2 py-1 rounded-full text-xs border ${getTypeColor(reminder.type)}`}>
-                        {reminder.type}
-                      </span>
-                      {isOverdue(reminder.reminderDate) && (
-                        <span className="px-2 py-1 rounded-full text-xs bg-red-100 text-red-800 border border-red-200">
-                          Overdue
-                        </span>
-                      )}
-                      {isToday(reminder.reminderDate) && (
-                        <span className="px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800 border border-yellow-200">
-                          Today
-                        </span>
-                      )}
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    {/* Header with icon, title, and badges */}
+                    <div className="flex items-start gap-2 mb-2">
+                      <span className="text-xl sm:text-lg flex-shrink-0">{getTypeIcon(reminder.type)}</span>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-gray-900 text-base sm:text-base mb-1 break-words">{reminder.title}</h4>
+                        <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                          <span className={`px-2 py-0.5 rounded-full text-xs border ${getTypeColor(reminder.type)}`}>
+                            {reminder.type}
+                          </span>
+                          {isOverdue(reminder.reminderDate) && (
+                            <span className="px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-800 border border-red-200">
+                              Overdue
+                            </span>
+                          )}
+                          {isToday(reminder.reminderDate) && (
+                            <span className="px-2 py-0.5 rounded-full text-xs bg-yellow-100 text-yellow-800 border border-yellow-200">
+                              Today
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
                     
-                    <p className="text-sm text-gray-600 mb-2">{reminder.description}</p>
+                    {reminder.description && (
+                      <p className="text-sm text-gray-600 mb-3 break-words">{reminder.description}</p>
+                    )}
                     
-                    <div className="text-sm text-gray-500 space-y-1">
-                      <div>
-                        <strong>Due:</strong> {new Date(reminder.dueDate).toLocaleDateString()} | 
-                        <strong> Remind:</strong> {new Date(reminder.reminderDate).toLocaleDateString()}
+                    {/* Dates - Mobile optimized */}
+                    <div className="text-xs sm:text-sm text-gray-500 space-y-1.5 mb-2">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                        <span className="font-semibold">📅 Due:</span>
+                        <span>{new Date(reminder.dueDate).toLocaleDateString()}</span>
+                        <span className="hidden sm:inline text-gray-300">|</span>
+                        <span className="font-semibold">🔔 Remind:</span>
+                        <span>{new Date(reminder.reminderDate).toLocaleDateString()}</span>
                       </div>
                       {reminder.termStartDate && reminder.termEndDate && (
-                        <div>
-                          <strong>Term Period:</strong> {new Date(reminder.termStartDate).toLocaleDateString()} - {new Date(reminder.termEndDate).toLocaleDateString()}
+                        <div className="flex flex-wrap items-center gap-1">
+                          <span className="font-semibold">📆 Term:</span>
+                          <span className="text-xs">{new Date(reminder.termStartDate).toLocaleDateString()} - {new Date(reminder.termEndDate).toLocaleDateString()}</span>
                         </div>
                       )}
-                      <div>
-                        <strong>Priority:</strong> 
-                        <span className={`ml-1 px-2 py-0.5 rounded text-xs ${
+                      
+                      {/* Priority and Category badges */}
+                      <div className="flex flex-wrap items-center gap-2 pt-1">
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                           reminder.priority === 'urgent' ? 'bg-red-100 text-red-800' :
                           reminder.priority === 'high' ? 'bg-orange-100 text-orange-800' :
                           reminder.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
@@ -288,76 +301,94 @@ export default function RemindersSection() {
                           {reminder.priority}
                         </span>
                         {reminder.category && (
-                          <>
-                            <strong className="ml-3">Category:</strong> 
-                            <span className="ml-1 px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-800">
-                              {reminder.category}
-                            </span>
-                          </>
+                          <span className="px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-800 font-medium">
+                            {reminder.category}
+                          </span>
                         )}
                       </div>
-                      {reminder.assignedTo && (
-                        <div>
-                          <strong>Assigned to:</strong> {reminder.assignedTo}
-                        </div>
-                      )}
-                      {reminder.relatedCase && (
-                        <div>
-                          <strong>Related Case:</strong> {reminder.relatedCase}
-                        </div>
-                      )}
-                      {(reminder.contractParty1 || reminder.contractParty2) && (
-                        <div>
-                          <strong>Contract Parties:</strong> 
-                          {reminder.contractParty1 && <span className="ml-1">{reminder.contractParty1}</span>}
-                          {reminder.contractParty1 && reminder.contractParty2 && <span className="mx-1">↔</span>}
-                          {reminder.contractParty2 && <span>{reminder.contractParty2}</span>}
-                        </div>
-                      )}
-                      {reminder.documentId && (
-                        <div>
-                          <strong>Document:</strong> {getDocumentName(reminder.documentId)}
-                        </div>
-                      )}
-                      {reminder.extractedContext && (
-                        <div>
-                          <strong>Context:</strong> &quot;{reminder.extractedContext}&quot;
-                        </div>
-                      )}
                     </div>
+
+                    {/* Additional details - Collapsible on mobile */}
+                    {(reminder.assignedTo || reminder.relatedCase || reminder.contractParty1 || reminder.contractParty2 || reminder.documentId || reminder.extractedContext) && (
+                      <details className="text-xs sm:text-sm text-gray-500 mt-2">
+                        <summary className="cursor-pointer font-medium text-gray-700 hover:text-gray-900">
+                          More details
+                        </summary>
+                        <div className="space-y-1 mt-2 pl-4 border-l-2 border-gray-200">
+                          {reminder.assignedTo && (
+                            <div>
+                              <strong>👤 Assigned to:</strong> {reminder.assignedTo}
+                            </div>
+                          )}
+                          {reminder.relatedCase && (
+                            <div>
+                              <strong>📂 Related Case:</strong> {reminder.relatedCase}
+                            </div>
+                          )}
+                          {(reminder.contractParty1 || reminder.contractParty2) && (
+                            <div>
+                              <strong>🤝 Parties:</strong> 
+                              {reminder.contractParty1 && <span className="ml-1">{reminder.contractParty1}</span>}
+                              {reminder.contractParty1 && reminder.contractParty2 && <span className="mx-1">↔</span>}
+                              {reminder.contractParty2 && <span>{reminder.contractParty2}</span>}
+                            </div>
+                          )}
+                          {reminder.documentId && (
+                            <div>
+                              <strong>📄 Document:</strong> {getDocumentName(reminder.documentId)}
+                            </div>
+                          )}
+                          {reminder.extractedContext && (
+                            <div>
+                              <strong>💬 Context:</strong> &quot;{reminder.extractedContext}&quot;
+                            </div>
+                          )}
+                        </div>
+                      </details>
+                    )}
                   </div>
                   
+                  {/* Action Buttons - Mobile optimized */}
                   {reminder.status === 'active' && (
-                    <div className="flex space-x-2 ml-4">
-                      <div className="relative">
+                    <div className="flex sm:flex-col lg:flex-row gap-2 w-full sm:w-auto sm:ml-4">
+                      <div className="relative flex-1 sm:flex-none">
                         <button
-                          className="bg-yellow-600 text-white px-3 py-1 rounded text-sm hover:bg-yellow-700 transition-colors"
+                          className="w-full sm:w-auto bg-yellow-600 text-white px-4 py-2.5 sm:py-2 sm:px-3 rounded text-sm font-medium hover:bg-yellow-700 transition-colors active:bg-yellow-800"
                           onClick={() => {
                             const dropdown = document.getElementById(`snooze-${reminder._id}`);
                             dropdown?.classList.toggle('hidden');
                           }}
                         >
-                          Snooze
+                          😴 Snooze
                         </button>
                         <div
                           id={`snooze-${reminder._id}`}
-                          className="hidden absolute right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-10"
+                          className="hidden absolute left-0 sm:right-0 sm:left-auto mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-20 min-w-full sm:min-w-[120px]"
                         >
                           <button
-                            onClick={() => handleSnoozeReminder(reminder._id, 1)}
-                            className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50"
+                            onClick={() => {
+                              handleSnoozeReminder(reminder._id, 1);
+                              document.getElementById(`snooze-${reminder._id}`)?.classList.add('hidden');
+                            }}
+                            className="block w-full text-left px-4 py-2.5 sm:py-2 text-sm hover:bg-gray-50 active:bg-gray-100"
                           >
                             1 day
                           </button>
                           <button
-                            onClick={() => handleSnoozeReminder(reminder._id, 3)}
-                            className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50"
+                            onClick={() => {
+                              handleSnoozeReminder(reminder._id, 3);
+                              document.getElementById(`snooze-${reminder._id}`)?.classList.add('hidden');
+                            }}
+                            className="block w-full text-left px-4 py-2.5 sm:py-2 text-sm hover:bg-gray-50 active:bg-gray-100"
                           >
                             3 days
                           </button>
                           <button
-                            onClick={() => handleSnoozeReminder(reminder._id, 7)}
-                            className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50"
+                            onClick={() => {
+                              handleSnoozeReminder(reminder._id, 7);
+                              document.getElementById(`snooze-${reminder._id}`)?.classList.add('hidden');
+                            }}
+                            className="block w-full text-left px-4 py-2.5 sm:py-2 text-sm hover:bg-gray-50 active:bg-gray-100"
                           >
                             1 week
                           </button>
@@ -365,15 +396,15 @@ export default function RemindersSection() {
                       </div>
                       <button
                         onClick={() => handleDismissReminder(reminder._id)}
-                        className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 transition-colors"
+                        className="flex-1 sm:flex-none bg-green-600 text-white px-4 py-2.5 sm:py-2 sm:px-3 rounded text-sm font-medium hover:bg-green-700 transition-colors active:bg-green-800"
                       >
-                        Dismiss
+                        ✓ Done
                       </button>
                       <button
                         onClick={() => handleDeleteReminder(reminder._id)}
-                        className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors"
+                        className="flex-1 sm:flex-none bg-red-600 text-white px-4 py-2.5 sm:py-2 sm:px-3 rounded text-sm font-medium hover:bg-red-700 transition-colors active:bg-red-800"
                       >
-                        Delete
+                        🗑️ Delete
                       </button>
                     </div>
                   )}
@@ -386,9 +417,18 @@ export default function RemindersSection() {
 
       {/* Manual Reminder Form Modal */}
       {showReminderForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Create Manual Reminder</h3>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center z-50 p-0 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-none sm:rounded-lg p-4 sm:p-6 w-full sm:max-w-2xl min-h-screen sm:min-h-0 sm:max-h-[90vh] sm:overflow-y-auto">
+            <div className="flex items-center justify-between mb-4 sm:mb-4 sticky top-0 bg-white py-2 sm:py-0 sm:static border-b sm:border-b-0 -mx-4 px-4 sm:mx-0 sm:px-0">
+              <h3 className="text-lg sm:text-lg font-bold text-gray-900">Create Reminder</h3>
+              <button
+                type="button"
+                onClick={() => setShowReminderForm(false)}
+                className="text-gray-400 hover:text-gray-600 text-2xl sm:hidden"
+              >
+                ×
+              </button>
+            </div>
             <form onSubmit={handleCreateReminder} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
@@ -559,17 +599,17 @@ export default function RemindersSection() {
                   ))}
                 </select>
               </div>
-              <div className="flex space-x-3">
+              <div className="flex flex-col sm:flex-row gap-3 sticky bottom-0 bg-white py-4 -mx-4 px-4 sm:mx-0 sm:px-0 sm:py-0 border-t sm:border-t-0 mt-6">
                 <button
                   type="submit"
-                  className="flex-1 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
+                  className="flex-1 bg-blue-600 text-white py-3 sm:py-2 rounded-md hover:bg-blue-700 active:bg-blue-800 transition-colors font-medium"
                 >
                   Create Reminder
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowReminderForm(false)}
-                  className="flex-1 bg-gray-300 text-gray-700 py-2 rounded-md hover:bg-gray-400 transition-colors"
+                  className="flex-1 bg-gray-300 text-gray-700 py-3 sm:py-2 rounded-md hover:bg-gray-400 active:bg-gray-500 transition-colors font-medium"
                 >
                   Cancel
                 </button>
