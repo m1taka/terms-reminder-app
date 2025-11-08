@@ -5,12 +5,13 @@ import { googleCalendarService } from '@/lib/services/googleCalendar';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
+    const { id } = await params;
 
-    const event = await Event.findById(params.id).populate('documentId').lean();
+    const event = await Event.findById(id).populate('documentId').lean();
     
     if (!event) {
       return NextResponse.json(
@@ -20,10 +21,10 @@ export async function GET(
     }
 
     return NextResponse.json(event);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching event:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch event', details: error.message },
+      { error: 'Failed to fetch event' },
       { status: 500 }
     );
   }
@@ -31,15 +32,16 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
+    const { id } = await params;
 
     const body = await request.json();
 
     const event = await Event.findByIdAndUpdate(
-      params.id,
+      id,
       { $set: body },
       { new: true, runValidators: true }
     ).populate('documentId');
@@ -54,7 +56,6 @@ export async function PUT(
     // Sync with Google Calendar
     if (googleCalendarService.configured && event.googleCalendarEventId) {
       try {
-        const dateTime = `${new Date(event.date).toISOString().split('T')[0]}T${event.time}:00`;
         const reminderData = {
           title: event.title,
           description: event.description || `Event Type: ${event.type}\nLocation: ${event.location || 'N/A'}`,
@@ -67,16 +68,16 @@ export async function PUT(
         
         await googleCalendarService.updateEvent(event.googleCalendarEventId, reminderData);
         console.log('✓ Updated Google Calendar event:', event.googleCalendarEventId);
-      } catch (calendarError: any) {
-        console.error('Google Calendar update error:', calendarError.message);
+      } catch (calendarError) {
+        console.error('Google Calendar update error:', calendarError);
       }
     }
 
     return NextResponse.json({ message: 'Event updated successfully', event });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error updating event:', error);
     return NextResponse.json(
-      { error: 'Failed to update event', details: error.message },
+      { error: 'Failed to update event' },
       { status: 500 }
     );
   }
@@ -84,12 +85,13 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
+    const { id } = await params;
 
-    const event = await Event.findById(params.id);
+    const event = await Event.findById(id);
 
     if (!event) {
       return NextResponse.json(
@@ -103,18 +105,18 @@ export async function DELETE(
       try {
         await googleCalendarService.deleteEvent(event.googleCalendarEventId);
         console.log('✓ Deleted Google Calendar event:', event.googleCalendarEventId);
-      } catch (calendarError: any) {
-        console.error('Google Calendar delete error:', calendarError.message);
+      } catch (calendarError) {
+        console.error('Google Calendar delete error:', calendarError);
       }
     }
 
-    await Event.findByIdAndDelete(params.id);
+    await Event.findByIdAndDelete(id);
 
     return NextResponse.json({ message: 'Event deleted successfully' });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error deleting event:', error);
     return NextResponse.json(
-      { error: 'Failed to delete event', details: error.message },
+      { error: 'Failed to delete event' },
       { status: 500 }
     );
   }

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import { Reminder } from '@/lib/models/Reminder';
 
@@ -17,11 +17,12 @@ export async function GET() {
     }).populate('documentId').sort({ reminderDate: 1 }).lean();
 
     return NextResponse.json(reminders);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching today\'s reminders:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch today\'s reminders', details: error.message },
+      { error: 'Failed to fetch today\'s reminders' },
       { status: 500 }
     );
   }
 }
+

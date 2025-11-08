@@ -5,12 +5,13 @@ import { googleCalendarService } from '@/lib/services/googleCalendar';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
+    const { id } = await params;
 
-    const reminder = await Reminder.findById(params.id).populate('documentId').lean();
+    const reminder = await Reminder.findById(id).populate('documentId').lean();
     
     if (!reminder) {
       return NextResponse.json(
@@ -20,10 +21,10 @@ export async function GET(
     }
 
     return NextResponse.json(reminder);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching reminder:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch reminder', details: error.message },
+      { error: 'Failed to fetch reminder' },
       { status: 500 }
     );
   }
@@ -31,10 +32,11 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
+    const { id } = await params;
 
     const body = await request.json();
 
@@ -50,7 +52,7 @@ export async function PUT(
     if (updateData.extractedContext === '') delete updateData.extractedContext;
 
     const reminder = await Reminder.findByIdAndUpdate(
-      params.id,
+      id,
       { $set: updateData },
       { new: true, runValidators: true }
     ).populate('documentId');
@@ -69,10 +71,10 @@ export async function PUT(
     }
 
     return NextResponse.json({ message: 'Reminder updated successfully', reminder });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error updating reminder:', error);
     return NextResponse.json(
-      { error: 'Failed to update reminder', details: error.message },
+      { error: 'Failed to update reminder' },
       { status: 500 }
     );
   }
@@ -80,12 +82,13 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
+    const { id } = await params;
 
-    const reminder = await Reminder.findById(params.id);
+    const reminder = await Reminder.findById(id);
 
     if (!reminder) {
       return NextResponse.json(
@@ -100,13 +103,13 @@ export async function DELETE(
         .catch(err => console.error('Failed to delete calendar event:', err));
     }
 
-    await Reminder.findByIdAndDelete(params.id);
+    await Reminder.findByIdAndDelete(id);
 
     return NextResponse.json({ message: 'Reminder deleted successfully' });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error deleting reminder:', error);
     return NextResponse.json(
-      { error: 'Failed to delete reminder', details: error.message },
+      { error: 'Failed to delete reminder' },
       { status: 500 }
     );
   }

@@ -4,13 +4,14 @@ import { Reminder } from '@/lib/models/Reminder';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
+    const { id } = await params;
 
     const reminder = await Reminder.findByIdAndUpdate(
-      params.id,
+      id,
       { $set: { status: 'dismissed' } },
       { new: true }
     ).populate('documentId');
@@ -23,10 +24,10 @@ export async function PUT(
     }
 
     return NextResponse.json({ message: 'Reminder dismissed successfully', reminder });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error dismissing reminder:', error);
     return NextResponse.json(
-      { error: 'Failed to dismiss reminder', details: error.message },
+      { error: 'Failed to dismiss reminder' },
       { status: 500 }
     );
   }

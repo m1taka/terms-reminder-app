@@ -4,10 +4,11 @@ import { Reminder } from '@/lib/models/Reminder';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
+    const { id } = await params;
 
     const body = await request.json();
 
@@ -19,7 +20,7 @@ export async function PUT(
     }
 
     const reminder = await Reminder.findByIdAndUpdate(
-      params.id,
+      id,
       {
         $set: {
           status: 'snoozed',
@@ -38,10 +39,10 @@ export async function PUT(
     }
 
     return NextResponse.json({ message: 'Reminder snoozed successfully', reminder });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error snoozing reminder:', error);
     return NextResponse.json(
-      { error: 'Failed to snooze reminder', details: error.message },
+      { error: 'Failed to snooze reminder' },
       { status: 500 }
     );
   }

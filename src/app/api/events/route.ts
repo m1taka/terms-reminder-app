@@ -40,10 +40,10 @@ export async function GET(request: NextRequest) {
       .lean();
 
     return NextResponse.json(events);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching events:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch events', details: error.message },
+      { error: 'Failed to fetch events' },
       { status: 500 }
     );
   }
@@ -61,7 +61,6 @@ export async function POST(request: NextRequest) {
     // Sync with Google Calendar
     if (googleCalendarService.configured) {
       try {
-        const dateTime = `${new Date(event.date).toISOString().split('T')[0]}T${event.time}:00`;
         const reminderData = {
           title: event.title,
           description: event.description || `Event Type: ${event.type}\nLocation: ${event.location || 'N/A'}`,
@@ -78,8 +77,8 @@ export async function POST(request: NextRequest) {
           await event.save();
           console.log('✓ Created Google Calendar event:', calendarEventId);
         }
-      } catch (calendarError: any) {
-        console.error('Google Calendar sync error:', calendarError.message);
+      } catch (calendarError) {
+        console.error('Google Calendar sync error:', calendarError);
       }
     }
 
@@ -87,11 +86,12 @@ export async function POST(request: NextRequest) {
       { message: 'Event created successfully', event },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error creating event:', error);
     return NextResponse.json(
-      { error: 'Failed to create event', details: error.message },
+      { error: 'Failed to create event' },
       { status: 500 }
     );
   }
 }
+

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import mongoose from 'mongoose';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     await connectDB();
     
@@ -11,15 +11,15 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
       mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
     });
-  } catch (error: any) {
+  } catch {
     return NextResponse.json(
       { 
         status: 'error',
         timestamp: new Date().toISOString(),
-        mongodb: 'disconnected',
-        error: error.message
+        mongodb: 'disconnected'
       },
       { status: 500 }
     );
   }
 }
+

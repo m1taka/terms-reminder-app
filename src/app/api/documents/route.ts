@@ -25,10 +25,10 @@ export async function GET(request: NextRequest) {
 
     const documents = await Document.find(filter).sort({ uploadDate: -1 }).lean();
     return NextResponse.json(documents);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching documents:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch documents', details: error.message },
+      { error: 'Failed to fetch documents' },
       { status: 500 }
     );
   }
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
     try {
       await mkdir(uploadsDir, { recursive: true });
-    } catch (err) {
+    } catch {
       // Directory already exists
     }
 
@@ -98,11 +98,12 @@ export async function POST(request: NextRequest) {
       { message: 'Document uploaded successfully', document },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error uploading document:', error);
     return NextResponse.json(
-      { error: 'Failed to upload document', details: error.message },
+      { error: 'Failed to upload document' },
       { status: 500 }
     );
   }
 }
+

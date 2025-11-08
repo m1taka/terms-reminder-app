@@ -23,10 +23,10 @@ export async function GET(request: NextRequest) {
       .lean();
 
     return NextResponse.json(reminders);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching reminders:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch reminders', details: error.message },
+      { error: 'Failed to fetch reminders' },
       { status: 500 }
     );
   }
@@ -68,11 +68,12 @@ export async function POST(request: NextRequest) {
       { message: 'Reminder created successfully', reminder },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error creating reminder:', error);
     return NextResponse.json(
-      { error: 'Failed to create reminder', details: error.message },
+      { error: 'Failed to create reminder' },
       { status: 500 }
     );
   }
 }
+

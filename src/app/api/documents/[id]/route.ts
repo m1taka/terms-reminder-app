@@ -4,12 +4,13 @@ import { Document } from '@/lib/models/Document';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
+    const { id } = await params;
 
-    const document = await Document.findById(params.id).lean();
+    const document = await Document.findById(id).lean();
     
     if (!document) {
       return NextResponse.json(
@@ -19,10 +20,10 @@ export async function GET(
     }
 
     return NextResponse.json(document);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching document:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch document', details: error.message },
+      { error: 'Failed to fetch document' },
       { status: 500 }
     );
   }
@@ -30,15 +31,16 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
+    const { id } = await params;
 
     const body = await request.json();
 
     const document = await Document.findByIdAndUpdate(
-      params.id,
+      id,
       { $set: body },
       { new: true, runValidators: true }
     );
@@ -51,10 +53,10 @@ export async function PUT(
     }
 
     return NextResponse.json({ message: 'Document updated successfully', document });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error updating document:', error);
     return NextResponse.json(
-      { error: 'Failed to update document', details: error.message },
+      { error: 'Failed to update document' },
       { status: 500 }
     );
   }
@@ -62,12 +64,13 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
+    const { id } = await params;
 
-    const document = await Document.findByIdAndDelete(params.id);
+    const document = await Document.findByIdAndDelete(id);
 
     if (!document) {
       return NextResponse.json(
@@ -77,10 +80,10 @@ export async function DELETE(
     }
 
     return NextResponse.json({ message: 'Document deleted successfully' });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error deleting document:', error);
     return NextResponse.json(
-      { error: 'Failed to delete document', details: error.message },
+      { error: 'Failed to delete document' },
       { status: 500 }
     );
   }
