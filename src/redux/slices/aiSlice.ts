@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import API_URL from '@/config/api';
 
 // Types
 interface Message {
@@ -33,7 +34,7 @@ const initialState: AIState = {
 export const sendMessage = createAsyncThunk(
   'ai/sendMessage',
   async (message: string) => {
-    const response = await fetch('http://localhost:5000/api/ai/chat', {
+    const response = await fetch(`${API_URL}/api/ai/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message }),
@@ -47,7 +48,7 @@ export const sendMessage = createAsyncThunk(
 export const analyzeDocument = createAsyncThunk(
   'ai/analyzeDocument',
   async (documentId: string) => {
-    const response = await fetch(`http://localhost:5000/api/ai/analyze/${documentId}`, {
+    const response = await fetch(`${API_URL}/api/ai/analyze/${documentId}`, {
       method: 'POST',
     });
     if (!response.ok) throw new Error('Failed to analyze document');
@@ -59,7 +60,7 @@ export const analyzeDocument = createAsyncThunk(
 export const summarizeDocuments = createAsyncThunk(
   'ai/summarizeDocuments',
   async (documentIds: string[]) => {
-    const response = await fetch('http://localhost:5000/api/ai/summarize', {
+    const response = await fetch(`${API_URL}/api/ai/summarize`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ documentIds }),

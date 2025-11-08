@@ -130,7 +130,7 @@ export const snoozeReminder = createAsyncThunk(
 export const deleteReminder = createAsyncThunk(
   'reminders/deleteReminder',
   async (id: string) => {
-    const response = await fetch(`http://localhost:5000/api/reminders/${id}`, {
+    const response = await fetch(`${API_URL}/api/reminders/${id}`, {
       method: 'DELETE',
     });
     if (!response.ok) throw new Error('Failed to delete reminder');

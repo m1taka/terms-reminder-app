@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import API_URL from '@/config/api';
 
 interface TodayReminder {
   id: string;
@@ -23,7 +24,7 @@ export default function ReminderNotifications() {
 
   const fetchTodayReminders = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/reminders/today');
+      const response = await fetch(`${API_URL}/api/reminders/today`);
       const data = await response.json();
       setTodayReminders(data);
     } catch (error) {

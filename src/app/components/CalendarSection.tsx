@@ -292,7 +292,7 @@ export default function CalendarSection() {
                               {reminder.priority}
                             </span>
                             <span className={`px-2 py-1 rounded-full text-xs ${
-                              reminder.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                              reminder.status === 'active' ? 'bg-yellow-100 text-yellow-800' :
                               reminder.status === 'completed' ? 'bg-green-100 text-green-800' :
                               'bg-gray-100 text-gray-800'
                             }`}>

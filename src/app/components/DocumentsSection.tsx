@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import API_URL from '@/config/api';
 
 interface Document {
   id: string;
@@ -25,7 +26,7 @@ export default function DocumentsSection() {
       if (searchTerm) params.append('search', searchTerm);
       if (selectedCategory) params.append('category', selectedCategory);
 
-      const response = await fetch(`http://localhost:5000/api/documents?${params}`);
+      const response = await fetch(`${API_URL}/api/documents?${params}`);
       const data = await response.json();
       setDocuments(data);
     } catch (error) {
@@ -35,11 +36,14 @@ export default function DocumentsSection() {
 
   useEffect(() => {
     fetchDocuments();
-  }, [searchTerm, selectedCategory, fetchDocuments]);  const handleDelete = async (documentId: string) => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm, selectedCategory]);
+
+  const handleDelete = async (documentId: string) => {
     if (!confirm('Are you sure you want to delete this document?')) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/documents/${documentId}`, {
+      const response = await fetch(`${API_URL}/api/documents/${documentId}`, {
         method: 'DELETE',
       });
 
