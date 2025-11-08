@@ -78,7 +78,10 @@ export default function CalendarSection() {
 
   const getEventsForDate = (date: Date) => {
     const dateStr = date.toISOString().split('T')[0];
-    return events.filter(event => event.date === dateStr);
+    return events.filter(event => {
+      const eventDate = new Date(event.date).toISOString().split('T')[0];
+      return eventDate === dateStr;
+    });
   };
 
   const getEventTypeColor = (type: string) => {
